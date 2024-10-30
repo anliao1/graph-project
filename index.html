@@ -3,49 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Graph Transformations</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    #graph { width: 100%; height: 500px; }
-  </style>
+  <title>Home - Graph Transformations Tool</title>
 </head>
 <body>
 
-  <h1>Graph Transformations: Learn Mode</h1>
-  <p>Translate the graph of y = x² up by 3 units.</p>
-  
-  <div id="graph"></div>
-  
-  <script>
-    // Initial graph (y = x^2)
-    const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
-    const yValues = xValues.map(x => x ** 2);
-    
-    // Graph with translation (y = x^2 + 3)
-    const yTransformed = xValues.map(x => x ** 2 + 3);
+  <h1>Welcome to the Graph Transformations Tool</h1>
+  <p>This tool helps you learn and practice graph transformations in algebra.</p>
 
-    const trace1 = {
-      x: xValues,
-      y: yValues,
-      mode: 'lines',
-      name: 'y = x²'
-    };
-    
-    const trace2 = {
-      x: xValues,
-      y: yTransformed,
-      mode: 'lines',
-      name: 'y = x² + 3'
-    };
-    
-    const layout = {
-      title: 'Graph Translation',
-      xaxis: { title: 'x' },
-      yaxis: { title: 'y' }
-    };
-    
-    Plotly.newPlot('graph', [trace1, trace2], layout);
-  </script>
+  <!-- Link to the graphing tool page -->
+  <a href="graph.html">Go to the Graph Tool</a>
 
 </body>
 </html>
