@@ -18,7 +18,7 @@
   
   <script>
     // Initial graph (y = x^2)
-    const xValues = math.range(-10, 10, 0.1).toArray();
+    const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
     const yValues = xValues.map(x => x ** 2);
     
     // Graph with translation (y = x^2 + 3)
