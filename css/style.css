@@ -1,0 +1,141 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  .container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .vertcontainer {
+    display: flex;
+    flex-direction: column;
+    margin-left: 100px;
+  }
+  
+  .vertcontainer p {
+    margin: 8px;
+  }
+  
+  .vertcontainer a {
+    text-decoration: none;
+    color: black; /* Change the color as needed */
+  }
+  
+  .profile-container {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    margin-left: 100px;
+  }
+  
+  .profile-picture {
+    width: 500px; /* Adjust the width of each picture as needed */
+    height: 400px; /* Adjust the height of each picture as needed */
+    margin-right: 50px; /* Adjust the space between the pictures */
+  }
+  
+  .icon {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .divider {
+    border-left: 1px solid #000;
+    height: 64px;
+    margin: 0 10px;
+  }
+  
+  .insta {
+    margin-left: 10px;
+    font-size: 18px;
+  }
+  
+  .awdeorio {
+    font-size: 36px;
+  }
+  
+  .right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+  }
+  
+  .right a {
+    text-decoration: none;
+    font-style: bold;
+    color: black; /* Change the color as needed */
+  }
+  
+  .right b {
+    margin: 0;
+    padding: 0 10px; /* Adjust the padding as needed */
+  }
+  
+  .divider-s {
+    border-left: 1px solid #000;
+    height: 15px;
+    margin: 0 2px;
+  }
+  
+  .hdivider {
+    border-top: 1px solid #000;
+    height: 64px;
+    margin: 0 5px;
+    margin-top: 10px;
+  }
+  
+  .section {
+    display: flex;
+    align-items: center;
+  }
+  
+  .section a {
+    text-decoration: none;
+    color: black; /* Change the color as needed */
+  }
+  
+  .section b {
+    margin: 0;
+    padding: 0 10px; /* Adjust the padding as needed */ 
+  }
+  
+  .post-container {
+    width: 750px; /* Set the width of the container */
+    border: 1px solid #ccc; /* Border style */
+    margin: 20px auto; /* Center the container */
+    box-sizing: border-box;
+  }
+  
+  .post-image {
+    width: 100%; /* Make the image fill the container width */
+    display: block;
+  }
+  
+  .post-caption {
+    padding: 10px;
+    font-weight: bold;
+  }
+  
+  .post-caption a {
+    text-decoration: none;
+    color: black; /* Change the color as needed */
+  }
+  
+  .post-caption b {
+    margin: 0;
+    padding: 0 10px; /* Adjust the padding as needed */ 
+  }
+  
+  .post-likes-comments {
+    padding: 10px;
+    border-top: 1px solid #ccc; /* Border between image and likes/comments */
+  }
+  
+  .post-likes-comments a {
+    text-decoration: none;
+    color: black;
+  }
+  
+  
