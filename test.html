@@ -1,98 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Graph Transformations</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    #graph { width: 100%; height: 500px; }
-    .controls { margin: 10px 0; }
-  </style>
-</head>
-<body>
-
-  <h1>Graph Transformations: Test Mode</h1>
-
-  <!-- Buttons for Parent Functions -->
-  <div class="controls">
-    <button onclick="setParentFunction('quadratic')">y = x²</button>
-    <button onclick="setParentFunction('linear')">y = x</button>
-    <button onclick="setParentFunction('absolute')">y = |x|</button>
-  </div>
-
-  <!-- Inputs for Parameters -->
-  <div class="controls">
-    <label for="a">a:</label>
-    <input type="number" id="a" value="1" step="0.1" onchange="updateGraph()">
-    <label for="b">b:</label>
-    <input type="number" id="b" value="0" step="0.1" onchange="updateGraph()">
-    <label for="c">c:</label>
-    <input type="number" id="c" value="0" step="0.1" onchange="updateGraph()">
-  </div>
-
-  <div id="graph"></div>
-
-  <script>
-    // Default function and range
-    let parentFunction = 'quadratic';
-    const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
-
-    // Set the parent function
-    function setParentFunction(func) {
-      parentFunction = func;
-      updateGraph();
-    }
-
-    // Calculate y-values based on parent function and parameters
-    function calculateYValues(a, b, c) {
-      switch (parentFunction) {
-        case 'quadratic':
-          return xValues.map(x => a * (x + b) ** 2 + c);
-        case 'linear':
-          return xValues.map(x => a * (x + b) + c);
-        case 'absolute':
-          return xValues.map(x => a * Math.abs(x + b) + c);
-        default:
-          return [];
-      }
-    }
-
-    // Update graph based on the selected parent function and parameters
-    function updateGraph() {
-      const a = parseFloat(document.getElementById('a').value);
-      const b = parseFloat(document.getElementById('b').value);
-      const c = parseFloat(document.getElementById('c').value);
-
-      const yValues = calculateYValues(a, b, c);
-
-      const trace = {
-        x: xValues,
-        y: yValues,
-        mode: 'lines',
-        name: `y = ${parentFunction} function`
-      };
-
-      const layout = {
-        title: `Graph of y = ${parentFunction} function`,
-        xaxis: {
-          title: 'x',
-          range: [-10, 10],  // Adjust as needed to include desired range
-          zeroline: true
-        },
-        yaxis: {
-          title: 'y',
-          range: [-10, 10],  // Adjust as needed to include desired range
-          zeroline: true
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Transformations</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        #graph {
+            width: 100%;
+            height: 500px;
         }
-      };
 
-      Plotly.newPlot('graph', [trace], layout);
-    }
+        .controls {
+            margin: 10px 0;
+        }
+    </style>
+</head>
 
-    // Initial plot
-    updateGraph();
-  </script>
+<body>
+    <h1>Graph Transformations: Learn Mode</h1>
 
+    <!-- Buttons for Parent Functions -->
+    <div class="controls">
+        <button onclick="setParentFunction('quadratic')">y = x²</button>
+        <button onclick="setParentFunction('linear')">y = x</button>
+        <button onclick="setParentFunction('absolute')">y = |x|</button>
+    </div>
+
+    <!-- Inputs for Parameters -->
+    <div class="controls">
+        <label for="a">a:</label>
+        <input type="number" id="a" value="1" step="1" onchange="updateGraph()">
+        <label for="b">h:</label>
+        <input type="number" id="b" value="0" step="1" onchange="updateGraph()">
+        <label for="c">k:</label>
+        <input type="number" id="c" value="0" step="1" onchange="updateGraph()">
+    </div>
+
+    <!-- Display Message for Selected Function -->
+    <div id="msg"></div>
+
+    <div id="graph"></div>
+
+    <script>
+        // Default function and range
+        let parentFunction = 'quadratic';
+        const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
+
+        // Set the parent function and display corresponding formula
+        function setParentFunction(func) {
+            parentFunction = func;
+
+            // Update the displayed formula message
+            const msgElement = document.getElementById('msg');
+            switch (parentFunction) {
+                case 'quadratic':
+                    msgElement.innerHTML = "Current formula: y = a(x - h)² + k";
+                    break;
+                case 'linear':
+                    msgElement.innerHTML = "Current formula: y = a(x - h) + k";
+                    break;
+                case 'absolute':
+                    msgElement.innerHTML = "Current formula: y = a|x - h| + k";
+                    break;
+                default:
+                    msgElement.innerHTML = "";
+            }
+
+            // Update the graph with the new parent function
+            updateGraph();
+        }
+
+        // Calculate y-values based on parent function and parameters
+        function calculateYValues(a, b, c) {
+            switch (parentFunction) {
+                case 'quadratic':
+                    return xValues.map(x => a * (x + b) ** 2 + c);
+                case 'linear':
+                    return xValues.map(x => a * (x + b) + c);
+                case 'absolute':
+                    return xValues.map(x => a * Math.abs(x + b) + c);
+                default:
+                    return [];
+            }
+        }
+
+        // Update graph based on the selected parent function and parameters
+        function updateGraph() {
+            const a = parseFloat(document.getElementById('a').value);
+            const b = parseFloat(document.getElementById('b').value);
+            const c = parseFloat(document.getElementById('c').value);
+
+            const yValues = calculateYValues(a, b, c);
+
+            const trace = {
+                x: xValues,
+                y: yValues,
+                mode: 'lines',
+                name: `y = ${parentFunction} function`
+            };
+
+            const layout = {
+                title: `Graph of y = ${parentFunction} function`,
+                xaxis: {
+                    title: 'x',
+                    range: [-10, 10],  // Adjust as needed to include desired range
+                    zeroline: true,
+                    dtick: 1
+                },
+                yaxis: {
+                    title: 'y',
+                    range: [-10, 10],  // Adjust as needed to include desired range
+                    zeroline: true,
+                    dtick: 1
+                }
+            };
+
+            Plotly.newPlot('graph', [trace], layout);
+        }
+
+        // Initial plot
+        updateGraph();
+    </script>
 </body>
 </html>

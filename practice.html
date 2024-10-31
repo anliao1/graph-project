@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,8 +18,7 @@
 </head>
 
 <body>
-
-    <h1>Graph Transformations: Practice Mode</h1>
+    <h1>Graph Transformations: Learn Mode</h1>
 
     <!-- Buttons for Parent Functions -->
     <div class="controls">
@@ -28,19 +26,19 @@
         <button onclick="setParentFunction('linear')">y = x</button>
         <button onclick="setParentFunction('absolute')">y = |x|</button>
     </div>
-    <script>
-        
-    </script>
 
     <!-- Inputs for Parameters -->
     <div class="controls">
         <label for="a">a:</label>
-        <input type="number" id="a" value="1" step="0.1" onchange="updateGraph()">
-        <label for="b">b:</label>
-        <input type="number" id="b" value="0" step="0.1" onchange="updateGraph()">
-        <label for="c">c:</label>
-        <input type="number" id="c" value="0" step="0.1" onchange="updateGraph()">
+        <input type="number" id="a" value="1" step="1" onchange="updateGraph()">
+        <label for="b">h:</label>
+        <input type="number" id="b" value="0" step="1" onchange="updateGraph()">
+        <label for="c">k:</label>
+        <input type="number" id="c" value="0" step="1" onchange="updateGraph()">
     </div>
+
+    <!-- Display Message for Selected Function -->
+    <div id="msg"></div>
 
     <div id="graph"></div>
 
@@ -49,9 +47,27 @@
         let parentFunction = 'quadratic';
         const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
 
-        // Set the parent function
+        // Set the parent function and display corresponding formula
         function setParentFunction(func) {
             parentFunction = func;
+
+            // Update the displayed formula message
+            const msgElement = document.getElementById('msg');
+            switch (parentFunction) {
+                case 'quadratic':
+                    msgElement.innerHTML = "Current formula: y = a(x - h)² + k";
+                    break;
+                case 'linear':
+                    msgElement.innerHTML = "Current formula: y = a(x - h) + k";
+                    break;
+                case 'absolute':
+                    msgElement.innerHTML = "Current formula: y = a|x - h| + k";
+                    break;
+                default:
+                    msgElement.innerHTML = "";
+            }
+
+            // Update the graph with the new parent function
             updateGraph();
         }
 
@@ -89,12 +105,14 @@
                 xaxis: {
                     title: 'x',
                     range: [-10, 10],  // Adjust as needed to include desired range
-                    zeroline: true
+                    zeroline: true,
+                    dtick: 1
                 },
                 yaxis: {
                     title: 'y',
                     range: [-10, 10],  // Adjust as needed to include desired range
-                    zeroline: true
+                    zeroline: true,
+                    dtick: 1
                 }
             };
 
@@ -104,7 +122,5 @@
         // Initial plot
         updateGraph();
     </script>
-
 </body>
-
 </html>
