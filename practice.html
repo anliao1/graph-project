@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,13 +33,13 @@
         <label for="a">a:</label>
         <input type="number" id="a" value="1" step="1" onchange="updateGraph()">
         <label for="b">h:</label>
-        <input type="number" id="b" value="0" step="1" onchange="updateGraph()">
+        <input type="number" id="h" value="0" step="1" onchange="updateGraph()">
         <label for="c">k:</label>
-        <input type="number" id="c" value="0" step="1" onchange="updateGraph()">
+        <input type="number" id="k" value="0" step="1" onchange="updateGraph()">
     </div>
 
     <!-- Display Message for Selected Function -->
-    <div id="msg"></div>
+    <div id="msg">Current formula: y = a(x - h)² + k</div>
 
     <div id="graph"></div>
 
@@ -47,11 +48,9 @@
         let parentFunction = 'quadratic';
         const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
 
-        // Set the parent function and display corresponding formula
+        // Set the parent function
         function setParentFunction(func) {
             parentFunction = func;
-
-            // Update the displayed formula message
             const msgElement = document.getElementById('msg');
             switch (parentFunction) {
                 case 'quadratic':
@@ -66,61 +65,82 @@
                 default:
                     msgElement.innerHTML = "";
             }
-
-            // Update the graph with the new parent function
             updateGraph();
         }
 
-        // Calculate y-values based on parent function and parameters
-        function calculateYValues(a, b, c) {
+        // Calculate y-values based on parent function without transformation (parent graph)
+        function calculateParentYValues() {
             switch (parentFunction) {
                 case 'quadratic':
-                    return xValues.map(x => a * (x + b) ** 2 + c);
+                    return xValues.map(x => x ** 2);
                 case 'linear':
-                    return xValues.map(x => a * (x + b) + c);
+                    return xValues.map(x => x);
                 case 'absolute':
-                    return xValues.map(x => a * Math.abs(x + b) + c);
+                    return xValues.map(x => Math.abs(x));
                 default:
                     return [];
             }
         }
 
-        // Update graph based on the selected parent function and parameters
+        // Calculate y-values based on parent function with transformation
+        function calculateTransformedYValues(a, h, k) {
+            switch (parentFunction) {
+                case 'quadratic':
+                    return xValues.map(x => a * (x - h) ** 2 + k);
+                case 'linear':
+                    return xValues.map(x => a * (x - h) + k);
+                case 'absolute':
+                    return xValues.map(x => a * Math.abs(x - h) + k);
+                default:
+                    return [];
+            }
+        }
+
+        // Update graph with both parent and transformed functions
         function updateGraph() {
             const a = parseFloat(document.getElementById('a').value);
-            const b = parseFloat(document.getElementById('b').value);
-            const c = parseFloat(document.getElementById('c').value);
+            const h = parseFloat(document.getElementById('h').value);
+            const k = parseFloat(document.getElementById('k').value);
 
-            const yValues = calculateYValues(a, b, c);
+            const parentYValues = calculateParentYValues();
+            const transformedYValues = calculateTransformedYValues(a, h, k);
 
-            const trace = {
+            const parentTrace = {
                 x: xValues,
-                y: yValues,
+                y: parentYValues,
                 mode: 'lines',
-                name: `y = ${parentFunction} function`
+                name: `Parent function`
+            };
+
+            const transformedTrace = {
+                x: xValues,
+                y: transformedYValues,
+                mode: 'lines',
+                name: `Transformed function`
             };
 
             const layout = {
-                title: `Graph of y = ${parentFunction} function`,
+                title: `Graph of Parent and Transformed Functions`,
                 xaxis: {
                     title: 'x',
-                    range: [-10, 10],  // Adjust as needed to include desired range
+                    range: [-10, 10],
                     zeroline: true,
                     dtick: 1
                 },
                 yaxis: {
                     title: 'y',
-                    range: [-10, 10],  // Adjust as needed to include desired range
+                    range: [-10, 10],
                     zeroline: true,
                     dtick: 1
                 }
             };
 
-            Plotly.newPlot('graph', [trace], layout);
+            Plotly.newPlot('graph', [parentTrace, transformedTrace], layout);
         }
 
-        // Initial plot
         updateGraph();
     </script>
+
 </body>
+
 </html>
