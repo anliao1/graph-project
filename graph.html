@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<!-- Types of questions: Word problem, Graph problem -->
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,14 +19,13 @@
 </head>
 
 <body>
-    <h1>Graph Transformations: Test Mode</h1>
+    <h1>Graph Transformations: Graph Mode</h1>
 
     <!-- Buttons for Parent Functions -->
     <div class="controls">
-        <button onclick="setParentFunction('quadratic')">y = x^2</button>
+        <button onclick="setParentFunction('quadratic')">y = x²</button>
         <button onclick="setParentFunction('linear')">y = x</button>
         <button onclick="setParentFunction('absolute')">y = |x|</button>
-        <button onclick="setParentFunction('cubic')">y = x^3</button>
     </div>
 
     <!-- Inputs for Parameters -->
@@ -65,9 +62,6 @@
                 case 'absolute':
                     msgElement.innerHTML = "Current formula: y = a|x - h| + k";
                     break;
-                case 'cubic':
-                    msgElement.innerHTML = "Current formula: y = a(x - h)³ + k";
-                    break;
                 default:
                     msgElement.innerHTML = "";
             }
@@ -83,8 +77,6 @@
                     return xValues.map(x => x);
                 case 'absolute':
                     return xValues.map(x => Math.abs(x));
-                case 'cubic':
-                    return xValues.map(x => x ** 3);
                 default:
                     return [];
             }
@@ -99,8 +91,6 @@
                     return xValues.map(x => a * (x - h) + k);
                 case 'absolute':
                     return xValues.map(x => a * Math.abs(x - h) + k);
-                case 'cubic':
-                    return xValues.map(x => a * (x - h) ** 3 + k);
                 default:
                     return [];
             }
