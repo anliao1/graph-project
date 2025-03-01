@@ -3,14 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Graph Transformations Test</title>
-    <a href="index.html">Index</a>
+    <title>Infinite Graph Transformations Test</title>
     <!-- Plotly for rendering graphs -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <!-- React and ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <!-- Babel to compile JSX -->
+    <!-- Babel for JSX -->
     <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <style>
       body {
@@ -19,6 +18,9 @@
       }
       .question-container {
         margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
       }
       .choices {
         list-style-type: none;
@@ -42,8 +44,240 @@
   <body>
     <div id="root"></div>
     <script type="text/babel">
-      // A React component that renders a Plotly graph.
-      // The equation prop should be a function (e.g., x => (x - 1)**2 + 3)
+      /***** Helper Functions *****/
+
+      // Returns a nicely formatted equation string based on the function type and transformation parameters.
+      function getEquationString(type, a, h, k) {
+        // Format coefficient a (omit 1, show "-" for -1)
+        let aStr = "";
+        if (a === 1) {
+          aStr = "";
+        } else if (a === -1) {
+          aStr = "-";
+        } else {
+          aStr = a;
+        }
+
+        // Format (x - h) part (handle signs)
+        let hStr = "";
+        if (h > 0) {
+          hStr = `(x - ${h})`;
+        } else if (h < 0) {
+          hStr = `(x + ${Math.abs(h)})`;
+        } else {
+          hStr = "x";
+        }
+
+        // Format constant k part
+        let kStr = "";
+        if (k > 0) {
+          kStr = ` + ${k}`;
+        } else if (k < 0) {
+          kStr = ` - ${Math.abs(k)}`;
+        }
+
+        // Build based on function type
+        switch (type) {
+          case "quadratic":
+            return `y = ${aStr}${hStr}²${kStr}`;
+          case "linear":
+            return `y = ${aStr}${hStr}${kStr}`;
+          case "absolute":
+            // For absolute, we show the absolute value with proper sign for h
+            if (h > 0) {
+              return `y = ${aStr}|x - ${h}|${kStr}`;
+            } else if (h < 0) {
+              return `y = ${aStr}|x + ${Math.abs(h)}|${kStr}`;
+            } else {
+              return `y = ${aStr}|x|${kStr}`;
+            }
+          case "cubic":
+            return `y = ${aStr}${hStr}³${kStr}`;
+          default:
+            return "";
+        }
+      }
+
+      // Shuffle an array (Fisher–Yates shuffle)
+      function shuffleArray(array) {
+        let arr = array.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      // Generate three distractor equations by modifying one parameter at a time.
+      function generateEquationDistractors(parent, a, h, k, correctEquation) {
+        const distractors = [];
+        // Distractor 1: flip sign of h (if h is 0, adjust by 1)
+        let h1 = h !== 0 ? -h : h + 1;
+        distractors.push(getEquationString(parent, a, h1, k));
+        // Distractor 2: flip sign of k (if k is 0, adjust by 1)
+        let k2 = k !== 0 ? -k : k + 1;
+        distractors.push(getEquationString(parent, a, h, k2));
+        // Distractor 3: change a (if a is 1, use 2; otherwise, use 1)
+        let a3 = a === 1 ? 2 : 1;
+        distractors.push(getEquationString(parent, a3, h, k));
+
+        // Ensure uniqueness and that none match the correct equation.
+        return distractors.filter(
+          (d, i, arr) => d !== correctEquation && arr.indexOf(d) === i
+        ).slice(0, 3);
+      }
+
+      // Generate three distractors for the parameter-based (flip) question.
+      function generateParameterDistractors(a, h, k, correctParams) {
+        const distractors = [];
+        // Distractor 1: change a slightly
+        let a1 = a === 1 ? 2 : 1;
+        distractors.push(`a=${a1}, h=${h}, k=${k}`);
+        // Distractor 2: change h slightly (ensure h stays in -5 to 5)
+        let h1 = h === 5 ? h - 1 : h + 1;
+        distractors.push(`a=${a}, h=${h1}, k=${k}`);
+        // Distractor 3: change k slightly (ensure k stays in -5 to 5)
+        let k1 = k === 5 ? k - 1 : k + 1;
+        distractors.push(`a=${a}, h=${h}, k=${k1}`);
+
+        return distractors.filter(
+          (d, i, arr) => d !== correctParams && arr.indexOf(d) === i
+        ).slice(0, 3);
+      }
+
+      // Generate a random question.
+      function generateQuestion() {
+        // Choose question type at random:
+        // "text": display a text prompt (show parent & parameters) and ask for the correct equation.
+        // "graph": display a Plotly graph of the transformed function and ask for the correct equation.
+        // "flip": display the transformed equation and ask for the transformation parameters.
+        const types = ["text", "graph", "flip"];
+        const qType = types[Math.floor(Math.random() * types.length)];
+
+        // Randomly choose a parent function.
+        const parentTypes = ["quadratic", "linear", "absolute", "cubic"];
+        const parent = parentTypes[Math.floor(Math.random() * parentTypes.length)];
+
+        // Randomly generate transformation parameters.
+        const aValues = [-3, -2, -1, 1, 2, 3]; // avoid 0 for a
+        const a = aValues[Math.floor(Math.random() * aValues.length)];
+        const h = Math.floor(Math.random() * 11) - 5; // h in [-5, 5]
+        const k = Math.floor(Math.random() * 11) - 5; // k in [-5, 5]
+
+        // Get the correct equation string.
+        const correctEquation = getEquationString(parent, a, h, k);
+
+        // For questions where the answer choices are equations.
+        if (qType === "text" || qType === "graph") {
+          let prompt;
+          if (qType === "text") {
+            // For text, include the parent function and parameters in the prompt.
+            let parentDisplay =
+              parent === "quadratic"
+                ? "x²"
+                : parent === "linear"
+                ? "x"
+                : parent === "absolute"
+                ? "|x|"
+                : "x³";
+            prompt = `For the parent function y = ${parentDisplay} with transformation parameters a = ${a}, h = ${h}, and k = ${k}, what is the equation of the transformed function?`;
+          } else {
+            prompt =
+              "Look at the graph below and determine which equation corresponds to the displayed transformed function.";
+          }
+          const distractors = generateEquationDistractors(
+            parent,
+            a,
+            h,
+            k,
+            correctEquation
+          );
+          const allChoices = shuffleArray([correctEquation, ...distractors]);
+          const choices = allChoices.map((choice, index) => ({
+            id: String.fromCharCode(65 + index),
+            text: choice,
+          }));
+          return {
+            id: Date.now(),
+            type: qType,
+            prompt: prompt,
+            parent: parent,
+            a: a,
+            h: h,
+            k: k,
+            correct: correctEquation,
+            choices: choices,
+            correctChoice: choices.find(
+              (choice) => choice.text === correctEquation
+            ).id,
+            // The function to render the graph (used for "graph" type questions)
+            equationFunc: (x) => {
+              switch (parent) {
+                case "quadratic":
+                  return a * Math.pow(x - h, 2) + k;
+                case "linear":
+                  return a * (x - h) + k;
+                case "absolute":
+                  return a * Math.abs(x - h) + k;
+                case "cubic":
+                  return a * Math.pow(x - h, 3) + k;
+                default:
+                  return 0;
+              }
+            },
+          };
+        } else if (qType === "flip") {
+          // For "flip" type, we show the transformed equation and ask for the parameters.
+          const prompt = `Given the transformed function ${correctEquation}, which transformation parameters were applied to the parent function y = ${
+            parent === "quadratic"
+              ? "x²"
+              : parent === "linear"
+              ? "x"
+              : parent === "absolute"
+              ? "|x|"
+              : "x³"
+          }?`;
+          const correctParams = `a=${a}, h=${h}, k=${k}`;
+          const distractors = generateParameterDistractors(a, h, k, correctParams);
+          const allChoices = shuffleArray([correctParams, ...distractors]);
+          const choices = allChoices.map((choice, index) => ({
+            id: String.fromCharCode(65 + index),
+            text: choice,
+          }));
+          return {
+            id: Date.now(),
+            type: "flip",
+            prompt: prompt,
+            parent: parent,
+            a: a,
+            h: h,
+            k: k,
+            correct: correctParams,
+            choices: choices,
+            correctChoice: choices.find(
+              (choice) => choice.text === correctParams
+            ).id,
+            // Also supply the equation function if needed.
+            equationFunc: (x) => {
+              switch (parent) {
+                case "quadratic":
+                  return a * Math.pow(x - h, 2) + k;
+                case "linear":
+                  return a * (x - h) + k;
+                case "absolute":
+                  return a * Math.abs(x - h) + k;
+                case "cubic":
+                  return a * Math.pow(x - h, 3) + k;
+                default:
+                  return 0;
+              }
+            },
+          };
+        }
+      }
+
+      /***** Graph Component *****/
+      // Renders a Plotly graph given an equation function.
       function Graph({ equation }) {
         const graphRef = React.useRef(null);
 
@@ -57,13 +291,13 @@
           const trace = {
             x: xValues,
             y: yValues,
-            mode: 'lines',
-            name: 'Graph'
+            mode: "lines",
+            name: "Graph",
           };
           const layout = {
             margin: { t: 20 },
-            xaxis: { title: 'x', zeroline: true },
-            yaxis: { title: 'y', zeroline: true }
+            xaxis: { title: "x", zeroline: true },
+            yaxis: { title: "y", zeroline: true },
           };
           Plotly.newPlot(graphRef.current, [trace], layout);
         }, [equation]);
@@ -71,65 +305,27 @@
         return <div className="graph-container" ref={graphRef}></div>;
       }
 
-      // The main test app component.
+      /***** Main Test App Component *****/
       function GraphTestApp() {
-        // Define an array of questions.
-        // Question types: 'text' (just text-based multiple choice)
-        // and 'graph' (renders a Plotly graph with the question)
-        const questions = [
-          {
-            id: 1,
-            type: 'text',
-            prompt:
-              "Which of the following equations best represents a graph that is the result of shifting y = x² two units to the right?",
-            choices: [
-              { id: 'A', text: "y = (x - 2)²" },
-              { id: 'B', text: "y = (x + 2)²" },
-              { id: 'C', text: "y = x² + 2" },
-              { id: 'D', text: "y = x² - 2" }
-            ],
-            correct: 'A'
-          },
-          {
-            id: 2,
-            type: 'graph',
-            prompt:
-              "Look at the graph below. Which equation corresponds to it?",
-            // For this question, we use an equation function to render the graph.
-            // Here, we are displaying the graph of y = (x - 1)² + 3.
-            equation: (x) => (x - 1) ** 2 + 3,
-            choices: [
-              { id: 'A', text: "y = (x - 1)²" },
-              { id: 'B', text: "y = (x + 1)²" },
-              { id: 'C', text: "y = (x - 1)² + 3" },
-              { id: 'D', text: "y = (x - 1)² - 3" }
-            ],
-            correct: 'C'
-          }
-        ];
-
-        const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
-        const [selectedChoice, setSelectedChoice] = React.useState('');
+        const [currentQuestion, setCurrentQuestion] = React.useState(generateQuestion());
+        const [selectedChoice, setSelectedChoice] = React.useState("");
         const [score, setScore] = React.useState(0);
+        const [questionsAnswered, setQuestionsAnswered] = React.useState(0);
         const [showFeedback, setShowFeedback] = React.useState(false);
-        const [feedback, setFeedback] = React.useState('');
-        const [completed, setCompleted] = React.useState(false);
-
-        const currentQuestion = questions[currentQuestionIndex];
+        const [feedback, setFeedback] = React.useState("");
 
         const handleChoiceChange = (e) => {
           setSelectedChoice(e.target.value);
         };
 
         const handleSubmit = () => {
-          if (selectedChoice === '') return;
-
-          if (selectedChoice === currentQuestion.correct) {
+          if (selectedChoice === "") return;
+          if (selectedChoice === currentQuestion.correctChoice) {
             setScore(score + 1);
             setFeedback("Correct!");
           } else {
             setFeedback(
-              "Incorrect. The correct answer was " + currentQuestion.correct
+              "Incorrect. The correct answer was " + currentQuestion.correctChoice
             );
           }
           setShowFeedback(true);
@@ -137,75 +333,67 @@
 
         const handleNext = () => {
           setShowFeedback(false);
-          setSelectedChoice('');
-          if (currentQuestionIndex + 1 < questions.length) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
-          } else {
-            setCompleted(true);
-          }
+          setSelectedChoice("");
+          setQuestionsAnswered(questionsAnswered + 1);
+          setCurrentQuestion(generateQuestion());
         };
 
         const handleRestart = () => {
-          setCurrentQuestionIndex(0);
-          setSelectedChoice('');
           setScore(0);
+          setQuestionsAnswered(0);
           setShowFeedback(false);
-          setCompleted(false);
+          setSelectedChoice("");
+          setCurrentQuestion(generateQuestion());
         };
 
         return (
           <div>
-            <h1>Graph Transformations Test</h1>
-            {completed ? (
-              <div>
-                <h2>Test Completed!</h2>
-                <p>
-                  Your score: {score} / {questions.length}
-                </p>
-                <button className="button" onClick={handleRestart}>
-                  Restart Test
+            <h1>Infinite Graph Transformations Test</h1>
+            <p>
+              Score: {score} / {questionsAnswered}
+            </p>
+            <div className="question-container">
+              <h2>Question</h2>
+              <p>{currentQuestion.prompt}</p>
+              {/* For graph-type questions, show the graph */}
+              {currentQuestion.type === "graph" && (
+                <Graph equation={currentQuestion.equationFunc} />
+              )}
+              <ul className="choices">
+                {currentQuestion.choices.map((choice) => (
+                  <li key={choice.id} className="choice">
+                    <label>
+                      <input
+                        type="radio"
+                        value={choice.id}
+                        checked={selectedChoice === choice.id}
+                        onChange={handleChoiceChange}
+                      />
+                      {choice.text}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              {!showFeedback ? (
+                <button
+                  className="button"
+                  onClick={handleSubmit}
+                  disabled={selectedChoice === ""}
+                >
+                  Submit Answer
                 </button>
-              </div>
-            ) : (
-              <div className="question-container">
-                <h2>Question {currentQuestionIndex + 1}</h2>
-                <p>{currentQuestion.prompt}</p>
-                {currentQuestion.type === 'graph' && (
-                  <Graph equation={currentQuestion.equation} />
-                )}
-                <ul className="choices">
-                  {currentQuestion.choices.map((choice) => (
-                    <li key={choice.id} className="choice">
-                      <label>
-                        <input
-                          type="radio"
-                          value={choice.id}
-                          checked={selectedChoice === choice.id}
-                          onChange={handleChoiceChange}
-                        />
-                        {choice.text}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-                {!showFeedback ? (
-                  <button
-                    className="button"
-                    onClick={handleSubmit}
-                    disabled={selectedChoice === ''}
-                  >
-                    Submit Answer
+              ) : (
+                <div>
+                  <p>{feedback}</p>
+                  <button className="button" onClick={handleNext}>
+                    Next Question
                   </button>
-                ) : (
-                  <div>
-                    <p>{feedback}</p>
-                    <button className="button" onClick={handleNext}>
-                      Next Question
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+            <button className="button" onClick={handleRestart}>
+              Restart Test
+            </button>
           </div>
         );
       }
