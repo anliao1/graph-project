@@ -31,12 +31,25 @@
     <!-- Inputs for Parameters -->
     <div class="controls">
         <label for="a">a:</label>
-        <input type="number" id="a" value="1" step="1" onchange="updateGraph()">
+        <div class="slidecontainer">
+            <input type="range" min="1" max="100" value="1" class="slider" id="a" onchange="updateGraph()">
+            <p>Value: <span id="demo"></span></p>
+            <input type="number" id="a" value="1" step="1" onchange="updateGraph()">
+        </div>
         <label for="b">h:</label>
         <input type="number" id="h" value="0" step="1" onchange="updateGraph()">
         <label for="c">k:</label>
         <input type="number" id="k" value="0" step="1" onchange="updateGraph()">
     </div>
+    <script>
+        var slider = document.getElementById("a");
+        var output = document.getElementById("demo");
+        output.innerHTML = slider.value;
+
+        slider.oninput = function () {
+            output.innerHTML = this.value;
+        }
+    </script>
 
     <!-- Display Message for Selected Function -->
     <div id="msg">Current formula: y = a(x - h)² + k</div>
@@ -125,13 +138,13 @@
                     title: 'x',
                     range: [-10, 10],
                     zeroline: true,
-                    dtick: 1
+                    dtick: 5
                 },
                 yaxis: {
                     title: 'y',
                     range: [-10, 10],
                     zeroline: true,
-                    dtick: 1
+                    dtick: 5
                 }
             };
 
