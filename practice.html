@@ -4,9 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graph Transformations</title>
+    <title>Graph Transformations Practice</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
         #graph {
             width: 100%;
             height: 500px;
@@ -15,112 +22,257 @@
         .controls {
             margin: 10px 0;
         }
+
+        .question-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .answer-container {
+            margin-top: 10px;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .parameter-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .parameter-input label {
+            width: 30px;
+            margin-right: 10px;
+        }
+
+        .parameter-input input {
+            width: 60px;
+        }
     </style>
 </head>
 
 <body>
-    <h1>Graph Transformations: Learn Mode</h1>
+    <h1>Graph Transformations: Practice Mode</h1>
 
-    <!-- Buttons for Parent Functions -->
     <div class="controls">
-        <button onclick="setParentFunction('quadratic')">y = x²</button>
-        <button onclick="setParentFunction('linear')">y = x</button>
-        <button onclick="setParentFunction('absolute')">y = |x|</button>
+        <button onclick="switchQuestionType('graph')">Graph Problems</button>
+        <button onclick="switchQuestionType('equation')">Equation Problems</button>
+        <button onclick="newQuestion()">New Question</button>
     </div>
 
-    <!-- Inputs for Parameters -->
-    <div class="controls">
-        <label for="a">a:</label>
-        <input type="number" id="a" value="1" step="1" onchange="updateGraph()">
-        <label for="b">h:</label>
-        <input type="number" id="h" value="0" step="1" onchange="updateGraph()">
-        <label for="c">k:</label>
-        <input type="number" id="k" value="0" step="1" onchange="updateGraph()">
+    <div class="question-container" id="questionContainer">
+        <h3 id="questionTitle">Question:</h3>
+        <p id="questionText"></p>
     </div>
-
-    <!-- Display Message for Selected Function -->
-    <div id="msg">Current formula: y = a(x - h)² + k</div>
 
     <div id="graph"></div>
 
+    <div class="answer-container" id="answerContainer">
+        <!-- Will be populated dynamically based on question type -->
+    </div>
+
+    <button onclick="checkAnswer()" id="checkButton">Check Answer</button>
+
+    <div class="feedback" id="feedback" style="display: none;"></div>
+
     <script>
-        // Default function and range
-        let parentFunction = 'quadratic';
+        // Variables to track the current state
+        let currentQuestionType = 'graph';
+        let currentQuestion = null;
+        let currentAnswer = null;
+        let parentFunction = null;
+        
+        // Function types and their representations
+        const functionTypes = [
+            { type: 'quadratic', formula: 'a(x - h)² + k', parent: 'y = x²' },
+            { type: 'linear', formula: 'a(x - h) + k', parent: 'y = x' },
+            { type: 'absolute', formula: 'a|x - h| + k', parent: 'y = |x|' },
+            { type: 'cubic', formula: 'a(x - h)³ + k', parent: 'y = x³' }
+        ];
+
+        // X-values for plotting
         const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
 
-        // Set the parent function
-        function setParentFunction(func) {
-            parentFunction = func;
-            const msgElement = document.getElementById('msg');
-            switch (parentFunction) {
-                case 'quadratic':
-                    msgElement.innerHTML = "Current formula: y = a(x - h)² + k";
-                    break;
-                case 'linear':
-                    msgElement.innerHTML = "Current formula: y = a(x - h) + k";
-                    break;
-                case 'absolute':
-                    msgElement.innerHTML = "Current formula: y = a|x - h| + k";
-                    break;
-                default:
-                    msgElement.innerHTML = "";
-            }
-            updateGraph();
+        // Switch between question types
+        function switchQuestionType(type) {
+            currentQuestionType = type;
+            newQuestion();
         }
 
-        // Calculate y-values based on parent function without transformation (parent graph)
-        function calculateParentYValues() {
-            switch (parentFunction) {
-                case 'quadratic':
-                    return xValues.map(x => x ** 2);
-                case 'linear':
-                    return xValues.map(x => x);
-                case 'absolute':
-                    return xValues.map(x => Math.abs(x));
-                default:
-                    return [];
+        // Generate a new random question
+        function newQuestion() {
+            // Hide any previous feedback
+            document.getElementById('feedback').style.display = 'none';
+            
+            if (currentQuestionType === 'graph') {
+                generateGraphQuestion();
+            } else {
+                generateEquationQuestion();
             }
         }
 
-        // Calculate y-values based on parent function with transformation
-        function calculateTransformedYValues(a, h, k) {
-            switch (parentFunction) {
-                case 'quadratic':
-                    return xValues.map(x => a * (x - h) ** 2 + k);
-                case 'linear':
-                    return xValues.map(x => a * (x - h) + k);
-                case 'absolute':
-                    return xValues.map(x => a * Math.abs(x - h) + k);
-                default:
-                    return [];
-            }
-        }
-
-        // Update graph with both parent and transformed functions
-        function updateGraph() {
-            const a = parseFloat(document.getElementById('a').value);
-            const h = parseFloat(document.getElementById('h').value);
-            const k = parseFloat(document.getElementById('k').value);
-
-            const parentYValues = calculateParentYValues();
-            const transformedYValues = calculateTransformedYValues(a, h, k);
-
-            const parentTrace = {
-                x: xValues,
-                y: parentYValues,
-                mode: 'lines',
-                name: `Parent function`
+        // Generate a graph-based question
+        function generateGraphQuestion() {
+            // Randomly select a function type
+            const functionIndex = Math.floor(Math.random() * functionTypes.length);
+            parentFunction = functionTypes[functionIndex].type;
+            
+            // Generate random transformation parameters (a, h, k)
+            const a = Math.floor(Math.random() * 3) + 1; // 1 to 3
+            const h = Math.floor(Math.random() * 9) - 4; // -4 to 4
+            const k = Math.floor(Math.random() * 9) - 4; // -4 to 4
+            
+            currentQuestion = {
+                type: 'graph',
+                functionType: parentFunction,
+                parent: functionTypes[functionIndex].parent,
+                parameters: { a, h, k }
             };
 
+            // Display the question
+            const questionText = `Given the transformed graph of ${functionTypes[functionIndex].parent}, find the values of a, h, and k in the formula y = ${functionTypes[functionIndex].formula}.`;
+            document.getElementById('questionText').innerHTML = questionText;
+            document.getElementById('questionTitle').textContent = 'Question: Graph to Equation';
+
+            // Create input fields for answers
+            const answerContainer = document.getElementById('answerContainer');
+            answerContainer.innerHTML = `
+                <div class="parameter-input">
+                    <label for="a_answer">a:</label>
+                    <input type="number" id="a_answer" step="0.1">
+                </div>
+                <div class="parameter-input">
+                    <label for="h_answer">h:</label>
+                    <input type="number" id="h_answer" step="0.1">
+                </div>
+                <div class="parameter-input">
+                    <label for="k_answer">k:</label>
+                    <input type="number" id="k_answer" step="0.1">
+                </div>
+            `;
+
+            // Plot the transformed graph (without showing the parent)
+            plotTransformedGraph(a, h, k, false);
+        }
+
+        // Generate an equation-based question
+        function generateEquationQuestion() {
+            // Randomly select a function type
+            const functionIndex = Math.floor(Math.random() * functionTypes.length);
+            parentFunction = functionTypes[functionIndex].type;
+            
+            // Generate random transformation parameters (a, h, k)
+            const a = Math.floor(Math.random() * 3) + 1; // 1 to 3
+            const h = Math.floor(Math.random() * 9) - 4; // -4 to 4
+            const k = Math.floor(Math.random() * 9) - 4; // -4 to 4
+            
+            currentQuestion = {
+                type: 'equation',
+                functionType: parentFunction,
+                parent: functionTypes[functionIndex].parent,
+                parameters: { a, h, k }
+            };
+
+            // Create the equation string
+            let equation = '';
+            switch (parentFunction) {
+                case 'quadratic':
+                    equation = `y = ${a}(x - ${h})² + ${k}`;
+                    break;
+                case 'linear':
+                    equation = `y = ${a}(x - ${h}) + ${k}`;
+                    break;
+                case 'absolute':
+                    equation = `y = ${a}|x - ${h}| + ${k}`;
+                    break;
+                case 'cubic':
+                    equation = `y = ${a}(x - ${h})³ + ${k}`;
+                    break;
+            }
+            
+            // Display the question
+            const questionText = `Given the equation ${equation}, sketch this graph by plotting key points.
+                <br><br>
+                Key points to plot:
+                <br>
+                For quadratic/absolute: vertex, y-intercept, and one other point
+                <br>
+                For linear: y-intercept, x-intercept (if any), and one other point
+                <br>
+                For cubic: y-intercept, x-intercept(s), and inflection point`;
+            
+            document.getElementById('questionText').innerHTML = questionText;
+            document.getElementById('questionTitle').textContent = 'Question: Equation to Graph';
+
+            // Setup interactive graph for sketching
+            const answerContainer = document.getElementById('answerContainer');
+            answerContainer.innerHTML = `
+                <p>Use the graph below to visualize. When you're ready, check your answer to see the correct graph.</p>
+            `;
+
+            // Plot empty graph that will be compared to the answer
+            plotEmptyGraph();
+        }
+
+        // Plot transformed graph without parent function
+        function plotTransformedGraph(a, h, k, showParent = true) {
+            const transformedYValues = calculateTransformedYValues(a, h, k);
+            
+            let traces = [];
+            
+            // Add parent function trace if requested
+            if (showParent) {
+                const parentYValues = calculateParentYValues();
+                const parentTrace = {
+                    x: xValues,
+                    y: parentYValues,
+                    mode: 'lines',
+                    name: 'Parent function',
+                    line: {
+                        color: 'blue',
+                        dash: 'dash'
+                    }
+                };
+                traces.push(parentTrace);
+            }
+            
+            // Add transformed function trace
             const transformedTrace = {
                 x: xValues,
                 y: transformedYValues,
                 mode: 'lines',
-                name: `Transformed function`
+                name: 'Transformed function',
+                line: {
+                    color: 'red'
+                }
             };
-
+            traces.push(transformedTrace);
+            
             const layout = {
-                title: `Graph of Parent and Transformed Functions`,
+                title: 'Graph',
                 xaxis: {
                     title: 'x',
                     range: [-10, 10],
@@ -134,11 +286,172 @@
                     dtick: 1
                 }
             };
-
-            Plotly.newPlot('graph', [parentTrace, transformedTrace], layout);
+            
+            Plotly.newPlot('graph', traces, layout);
         }
 
-        updateGraph();
+        // Plot empty graph for sketching
+        function plotEmptyGraph() {
+            const layout = {
+                title: 'Interactive Graph',
+                xaxis: {
+                    title: 'x',
+                    range: [-10, 10],
+                    zeroline: true,
+                    dtick: 1
+                },
+                yaxis: {
+                    title: 'y',
+                    range: [-10, 10],
+                    zeroline: true,
+                    dtick: 1
+                }
+            };
+            
+            Plotly.newPlot('graph', [], layout);
+        }
+
+        // Calculate y-values based on parent function without transformation
+        function calculateParentYValues() {
+            switch (parentFunction) {
+                case 'quadratic':
+                    return xValues.map(x => x ** 2);
+                case 'linear':
+                    return xValues.map(x => x);
+                case 'absolute':
+                    return xValues.map(x => Math.abs(x));
+                case 'cubic':
+                    return xValues.map(x => x ** 3);
+                default:
+                    return [];
+            }
+        }
+
+        // Calculate y-values based on parent function with transformation
+        function calculateTransformedYValues(a, h, k) {
+            switch (parentFunction) {
+                case 'quadratic':
+                    return xValues.map(x => a * ((x - h) ** 2) + k);
+                case 'linear':
+                    return xValues.map(x => a * (x - h) + k);
+                case 'absolute':
+                    return xValues.map(x => a * Math.abs(x - h) + k);
+                case 'cubic':
+                    return xValues.map(x => a * ((x - h) ** 3) + k);
+                default:
+                    return [];
+            }
+        }
+
+        // Check the user's answer
+        function checkAnswer() {
+            const feedbackElement = document.getElementById('feedback');
+            feedbackElement.style.display = 'block';
+            
+            if (currentQuestionType === 'graph') {
+                // Get user input values
+                const aAnswer = parseFloat(document.getElementById('a_answer').value);
+                const hAnswer = parseFloat(document.getElementById('h_answer').value);
+                const kAnswer = parseFloat(document.getElementById('k_answer').value);
+                
+                // Check if inputs are valid numbers
+                if (isNaN(aAnswer) || isNaN(hAnswer) || isNaN(kAnswer)) {
+                    feedbackElement.innerHTML = "Please enter valid numbers for all parameters.";
+                    feedbackElement.className = "feedback incorrect";
+                    return;
+                }
+                
+                // Check the answer
+                const correctA = currentQuestion.parameters.a;
+                const correctH = currentQuestion.parameters.h;
+                const correctK = currentQuestion.parameters.k;
+                
+                // Allow for small precision errors
+                const isCorrect = 
+                    Math.abs(aAnswer - correctA) < 0.1 && 
+                    Math.abs(hAnswer - correctH) < 0.1 && 
+                    Math.abs(kAnswer - correctK) < 0.1;
+                
+                if (isCorrect) {
+                    feedbackElement.innerHTML = "Correct! Your values match the transformed function.";
+                    feedbackElement.className = "feedback correct";
+                } else {
+                    feedbackElement.innerHTML = `Incorrect. The correct values are: a = ${correctA}, h = ${correctH}, k = ${correctK}.<br>
+                        Formula: y = ${getFunctionFormula(correctA, correctH, correctK)}`;
+                    feedbackElement.className = "feedback incorrect";
+                }
+                
+                // Show the parent function on the graph for comparison
+                plotTransformedGraph(correctA, correctH, correctK, true);
+                
+            } else {
+                // For equation questions, show the correct graph
+                const a = currentQuestion.parameters.a;
+                const h = currentQuestion.parameters.h;
+                const k = currentQuestion.parameters.k;
+                
+                plotTransformedGraph(a, h, k, true);
+                
+                // Provide feedback on key points
+                let keyPoints = "";
+                switch (parentFunction) {
+                    case 'quadratic':
+                        keyPoints = `
+                            <strong>Key points:</strong><br>
+                            Vertex: (${h}, ${k})<br>
+                            y-intercept: y = ${a * (h ** 2) + k} when x = 0<br>
+                            x-intercepts: x = ${h} ± ${Math.sqrt(-k/a).toFixed(2)} (when k ≠ 0 and -k/a ≥ 0)
+                        `;
+                        break;
+                    case 'linear':
+                        keyPoints = `
+                            <strong>Key points:</strong><br>
+                            y-intercept: y = ${a * (-h) + k} when x = 0<br>
+                            x-intercept: x = ${h + k/a} when y = 0
+                        `;
+                        break;
+                    case 'absolute':
+                        keyPoints = `
+                            <strong>Key points:</strong><br>
+                            Vertex: (${h}, ${k})<br>
+                            y-intercept: y = ${a * Math.abs(-h) + k} when x = 0
+                        `;
+                        break;
+                    case 'cubic':
+                        keyPoints = `
+                            <strong>Key points:</strong><br>
+                            y-intercept: y = ${a * ((-h) ** 3) + k} when x = 0<br>
+                            Inflection point: (${h}, ${k})
+                        `;
+                        break;
+                }
+                
+                feedbackElement.innerHTML = `
+                    <div>Check your graph against the correct one shown in red. The parent function is shown as a blue dashed line.</div>
+                    ${keyPoints}
+                `;
+                feedbackElement.className = "feedback";
+            }
+        }
+
+        // Get the formula as a string based on function type and parameters
+        function getFunctionFormula(a, h, k) {
+            switch (parentFunction) {
+                case 'quadratic':
+                    return `${a}(x - ${h})² + ${k}`;
+                case 'linear':
+                    return `${a}(x - ${h}) + ${k}`;
+                case 'absolute':
+                    return `${a}|x - ${h}| + ${k}`;
+                case 'cubic':
+                    return `${a}(x - ${h})³ + ${k}`;
+                default:
+                    return "";
+            }
+        }
+
+        // Initialize with a first question
+        newQuestion();
     </script>
 
 </body>
