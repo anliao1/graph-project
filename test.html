@@ -1,156 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<!-- Types of questions: Word problem, Graph problem -->
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graph Transformations</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Graph Transformations Test</title>
+    <a href="index.html">Index</a>
+    <!-- Plotly for rendering graphs -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <!-- Babel to compile JSX -->
+    <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <style>
-        #graph {
-            width: 100%;
-            height: 500px;
-        }
-
-        .controls {
-            margin: 10px 0;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .question-container {
+        margin-bottom: 20px;
+      }
+      .choices {
+        list-style-type: none;
+        padding: 0;
+      }
+      .choice {
+        margin: 10px 0;
+      }
+      .graph-container {
+        width: 100%;
+        height: 400px;
+        margin-bottom: 15px;
+      }
+      .button {
+        margin: 10px;
+        padding: 10px 20px;
+        font-size: 1rem;
+      }
     </style>
-</head>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      // A React component that renders a Plotly graph.
+      // The equation prop should be a function (e.g., x => (x - 1)**2 + 3)
+      function Graph({ equation }) {
+        const graphRef = React.useRef(null);
 
-<body>
-    <h1>Graph Transformations: Test Mode</h1>
+        React.useEffect(() => {
+          const xValues = [];
+          const yValues = [];
+          for (let x = -10; x <= 10; x += 0.1) {
+            xValues.push(x);
+            yValues.push(equation(x));
+          }
+          const trace = {
+            x: xValues,
+            y: yValues,
+            mode: 'lines',
+            name: 'Graph'
+          };
+          const layout = {
+            margin: { t: 20 },
+            xaxis: { title: 'x', zeroline: true },
+            yaxis: { title: 'y', zeroline: true }
+          };
+          Plotly.newPlot(graphRef.current, [trace], layout);
+        }, [equation]);
 
-    <!-- Buttons for Parent Functions -->
-    <div class="controls">
-        <button onclick="setParentFunction('quadratic')">y = x^2</button>
-        <button onclick="setParentFunction('linear')">y = x</button>
-        <button onclick="setParentFunction('absolute')">y = |x|</button>
-        <button onclick="setParentFunction('cubic')">y = x^3</button>
-    </div>
+        return <div className="graph-container" ref={graphRef}></div>;
+      }
 
-    <!-- Inputs for Parameters -->
-    <div class="controls">
-        <label for="a">a:</label>
-        <input type="number" id="a" value="1" step="1" onchange="updateGraph()">
-        <label for="b">h:</label>
-        <input type="number" id="h" value="0" step="1" onchange="updateGraph()">
-        <label for="c">k:</label>
-        <input type="number" id="k" value="0" step="1" onchange="updateGraph()">
-    </div>
+      // The main test app component.
+      function GraphTestApp() {
+        // Define an array of questions.
+        // Question types: 'text' (just text-based multiple choice)
+        // and 'graph' (renders a Plotly graph with the question)
+        const questions = [
+          {
+            id: 1,
+            type: 'text',
+            prompt:
+              "Which of the following equations best represents a graph that is the result of shifting y = x² two units to the right?",
+            choices: [
+              { id: 'A', text: "y = (x - 2)²" },
+              { id: 'B', text: "y = (x + 2)²" },
+              { id: 'C', text: "y = x² + 2" },
+              { id: 'D', text: "y = x² - 2" }
+            ],
+            correct: 'A'
+          },
+          {
+            id: 2,
+            type: 'graph',
+            prompt:
+              "Look at the graph below. Which equation corresponds to it?",
+            // For this question, we use an equation function to render the graph.
+            // Here, we are displaying the graph of y = (x - 1)² + 3.
+            equation: (x) => (x - 1) ** 2 + 3,
+            choices: [
+              { id: 'A', text: "y = (x - 1)²" },
+              { id: 'B', text: "y = (x + 1)²" },
+              { id: 'C', text: "y = (x - 1)² + 3" },
+              { id: 'D', text: "y = (x - 1)² - 3" }
+            ],
+            correct: 'C'
+          }
+        ];
 
-    <!-- Display Message for Selected Function -->
-    <div id="msg">Current formula: y = a(x - h)² + k</div>
+        const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
+        const [selectedChoice, setSelectedChoice] = React.useState('');
+        const [score, setScore] = React.useState(0);
+        const [showFeedback, setShowFeedback] = React.useState(false);
+        const [feedback, setFeedback] = React.useState('');
+        const [completed, setCompleted] = React.useState(false);
 
-    <div id="graph"></div>
+        const currentQuestion = questions[currentQuestionIndex];
 
-    <script>
-        // Default function and range
-        let parentFunction = 'quadratic';
-        const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
+        const handleChoiceChange = (e) => {
+          setSelectedChoice(e.target.value);
+        };
 
-        // Set the parent function
-        function setParentFunction(func) {
-            parentFunction = func;
-            const msgElement = document.getElementById('msg');
-            switch (parentFunction) {
-                case 'quadratic':
-                    msgElement.innerHTML = "Current formula: y = a(x - h)² + k";
-                    break;
-                case 'linear':
-                    msgElement.innerHTML = "Current formula: y = a(x - h) + k";
-                    break;
-                case 'absolute':
-                    msgElement.innerHTML = "Current formula: y = a|x - h| + k";
-                    break;
-                case 'cubic':
-                    msgElement.innerHTML = "Current formula: y = a(x - h)³ + k";
-                    break;
-                default:
-                    msgElement.innerHTML = "";
-            }
-            updateGraph();
-        }
+        const handleSubmit = () => {
+          if (selectedChoice === '') return;
 
-        // Calculate y-values based on parent function without transformation (parent graph)
-        function calculateParentYValues() {
-            switch (parentFunction) {
-                case 'quadratic':
-                    return xValues.map(x => x ** 2);
-                case 'linear':
-                    return xValues.map(x => x);
-                case 'absolute':
-                    return xValues.map(x => Math.abs(x));
-                case 'cubic':
-                    return xValues.map(x => x ** 3);
-                default:
-                    return [];
-            }
-        }
+          if (selectedChoice === currentQuestion.correct) {
+            setScore(score + 1);
+            setFeedback("Correct!");
+          } else {
+            setFeedback(
+              "Incorrect. The correct answer was " + currentQuestion.correct
+            );
+          }
+          setShowFeedback(true);
+        };
 
-        // Calculate y-values based on parent function with transformation
-        function calculateTransformedYValues(a, h, k) {
-            switch (parentFunction) {
-                case 'quadratic':
-                    return xValues.map(x => a * (x - h) ** 2 + k);
-                case 'linear':
-                    return xValues.map(x => a * (x - h) + k);
-                case 'absolute':
-                    return xValues.map(x => a * Math.abs(x - h) + k);
-                case 'cubic':
-                    return xValues.map(x => a * (x - h) ** 3 + k);
-                default:
-                    return [];
-            }
-        }
+        const handleNext = () => {
+          setShowFeedback(false);
+          setSelectedChoice('');
+          if (currentQuestionIndex + 1 < questions.length) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+          } else {
+            setCompleted(true);
+          }
+        };
 
-        // Update graph with both parent and transformed functions
-        function updateGraph() {
-            const a = parseFloat(document.getElementById('a').value);
-            const h = parseFloat(document.getElementById('h').value);
-            const k = parseFloat(document.getElementById('k').value);
+        const handleRestart = () => {
+          setCurrentQuestionIndex(0);
+          setSelectedChoice('');
+          setScore(0);
+          setShowFeedback(false);
+          setCompleted(false);
+        };
 
-            const parentYValues = calculateParentYValues();
-            const transformedYValues = calculateTransformedYValues(a, h, k);
+        return (
+          <div>
+            <h1>Graph Transformations Test</h1>
+            {completed ? (
+              <div>
+                <h2>Test Completed!</h2>
+                <p>
+                  Your score: {score} / {questions.length}
+                </p>
+                <button className="button" onClick={handleRestart}>
+                  Restart Test
+                </button>
+              </div>
+            ) : (
+              <div className="question-container">
+                <h2>Question {currentQuestionIndex + 1}</h2>
+                <p>{currentQuestion.prompt}</p>
+                {currentQuestion.type === 'graph' && (
+                  <Graph equation={currentQuestion.equation} />
+                )}
+                <ul className="choices">
+                  {currentQuestion.choices.map((choice) => (
+                    <li key={choice.id} className="choice">
+                      <label>
+                        <input
+                          type="radio"
+                          value={choice.id}
+                          checked={selectedChoice === choice.id}
+                          onChange={handleChoiceChange}
+                        />
+                        {choice.text}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+                {!showFeedback ? (
+                  <button
+                    className="button"
+                    onClick={handleSubmit}
+                    disabled={selectedChoice === ''}
+                  >
+                    Submit Answer
+                  </button>
+                ) : (
+                  <div>
+                    <p>{feedback}</p>
+                    <button className="button" onClick={handleNext}>
+                      Next Question
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      }
 
-            const parentTrace = {
-                x: xValues,
-                y: parentYValues,
-                mode: 'lines',
-                name: `Parent function`
-            };
-
-            const transformedTrace = {
-                x: xValues,
-                y: transformedYValues,
-                mode: 'lines',
-                name: `Transformed function`
-            };
-
-            const layout = {
-                title: `Graph of Parent and Transformed Functions`,
-                xaxis: {
-                    title: 'x',
-                    range: [-10, 10],
-                    zeroline: true,
-                    dtick: 1
-                },
-                yaxis: {
-                    title: 'y',
-                    range: [-10, 10],
-                    zeroline: true,
-                    dtick: 1
-                }
-            };
-
-            Plotly.newPlot('graph', [parentTrace, transformedTrace], layout);
-        }
-
-        updateGraph();
+      ReactDOM.render(<GraphTestApp />, document.getElementById("root"));
     </script>
-
-</body>
-
+  </body>
 </html>
