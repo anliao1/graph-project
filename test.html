@@ -83,7 +83,6 @@
           case "linear":
             return `y = ${aStr}${hStr}${kStr}`;
           case "absolute":
-            // For absolute, we show the absolute value with proper sign for h
             if (h > 0) {
               return `y = ${aStr}|x - ${h}|${kStr}`;
             } else if (h < 0) {
@@ -171,7 +170,6 @@
         if (qType === "text" || qType === "graph") {
           let prompt;
           if (qType === "text") {
-            // For text, include the parent function and parameters in the prompt.
             let parentDisplay =
               parent === "quadratic"
                 ? "x²"
@@ -227,7 +225,6 @@
             },
           };
         } else if (qType === "flip") {
-          // For "flip" type, we show the transformed equation and ask for the parameters.
           const prompt = `Given the transformed function ${correctEquation}, which transformation parameters were applied to the parent function y = ${
             parent === "quadratic"
               ? "x²"
@@ -257,7 +254,6 @@
             correctChoice: choices.find(
               (choice) => choice.text === correctParams
             ).id,
-            // Also supply the equation function if needed.
             equationFunc: (x) => {
               switch (parent) {
                 case "quadratic":
@@ -285,8 +281,9 @@
           const xValues = [];
           const yValues = [];
           for (let x = -10; x <= 10; x += 0.1) {
-            xValues.push(x);
-            yValues.push(equation(x));
+            xValues.push(x.toFixed(2));
+            // Round the y-value to 2 decimals to avoid floating-point artifacts.
+            yValues.push(parseFloat(equation(x).toFixed(2)));
           }
           const trace = {
             x: xValues,
@@ -307,10 +304,13 @@
 
       /***** Main Test App Component *****/
       function GraphTestApp() {
+        // New state variables to track questions answered, score, current streak, etc.
         const [currentQuestion, setCurrentQuestion] = React.useState(generateQuestion());
         const [selectedChoice, setSelectedChoice] = React.useState("");
         const [score, setScore] = React.useState(0);
         const [questionsAnswered, setQuestionsAnswered] = React.useState(0);
+        const [streak, setStreak] = React.useState(0);
+        // You might also consider tracking best streak or average time per question.
         const [showFeedback, setShowFeedback] = React.useState(false);
         const [feedback, setFeedback] = React.useState("");
 
@@ -320,13 +320,16 @@
 
         const handleSubmit = () => {
           if (selectedChoice === "") return;
+          // Immediately update the questions answered.
+          setQuestionsAnswered(prev => prev + 1);
+
           if (selectedChoice === currentQuestion.correctChoice) {
-            setScore(score + 1);
+            setScore(prev => prev + 1);
+            setStreak(prev => prev + 1);
             setFeedback("Correct!");
           } else {
-            setFeedback(
-              "Incorrect. The correct answer was " + currentQuestion.correctChoice
-            );
+            setStreak(0);
+            setFeedback("Incorrect. The correct answer was " + currentQuestion.correctChoice);
           }
           setShowFeedback(true);
         };
@@ -334,23 +337,27 @@
         const handleNext = () => {
           setShowFeedback(false);
           setSelectedChoice("");
-          setQuestionsAnswered(questionsAnswered + 1);
           setCurrentQuestion(generateQuestion());
         };
 
         const handleRestart = () => {
           setScore(0);
           setQuestionsAnswered(0);
+          setStreak(0);
           setShowFeedback(false);
           setSelectedChoice("");
           setCurrentQuestion(generateQuestion());
         };
 
+        // Calculate accuracy as a percentage.
+        const accuracy =
+          questionsAnswered > 0 ? ((score / questionsAnswered) * 100).toFixed(1) : 0;
+
         return (
           <div>
             <h1>Infinite Graph Transformations Test</h1>
             <p>
-              Score: {score} / {questionsAnswered}
+              Score: {score} / {questionsAnswered} | Accuracy: {accuracy}% | Current Streak: {streak}
             </p>
             <div className="question-container">
               <h2>Question</h2>
