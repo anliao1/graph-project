@@ -14,11 +14,6 @@ export default function Home() {
         This tool helps you learn and practice graph transformations in algebra.
       </p>
       <div className="flex flex-col space-y-4 w-full max-w-sm">
-        <Link href="/learn" passHref>
-          <Button variant="default" className="w-full">
-            Learn Mode
-          </Button>
-        </Link>
         <Link href="/practice" passHref>
           <Button variant="default" className="w-full">
             Practice Mode
@@ -27,11 +22,6 @@ export default function Home() {
         <Link href="/test" passHref>
           <Button variant="default" className="w-full">
             Test Mode
-          </Button>
-        </Link>
-        <Link href="/graph" passHref>
-          <Button variant="default" className="w-full">
-            Graph Mode
           </Button>
         </Link>
       </div>
