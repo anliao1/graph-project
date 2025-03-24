@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { updateStreak } from '../streak';
 import { Box, Button, Typography, createTheme, ThemeProvider } from '@mui/material';
 import { Google } from '@mui/icons-material';
 import { signInWithGoogle } from '../Firebase';
@@ -52,7 +53,8 @@ const Login: React.FC = () => {
     try {
       const result = await signInWithGoogle();
       setUser(result.user);
-      router.push('/'); // Redirect to pantry list page after successful login
+      await updateStreak();
+      router.push('/'); // Redirect to home page after successful login
     } catch (error) {
       console.error('Error during sign-in:', error);
     }
