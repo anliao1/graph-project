@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Plotly from "plotly.js-dist";
 
 const xValues = Array.from({ length: 201 }, (_, i) => -10 + i * 0.1);
 
@@ -13,7 +12,6 @@ const functionTypes = [
 ];
 
 function GraphPracticeApp() {
-  const [currentQuestionType, setCurrentQuestionType] = useState("graph");
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionTitle, setQuestionTitle] = useState("");
   const [questionText, setQuestionText] = useState("");
@@ -26,12 +24,12 @@ function GraphPracticeApp() {
 
   useEffect(() => {
     generateGraphQuestion();
-  }, [currentQuestionType]);
+  }, []);
 
   useEffect(() => {
     if (currentQuestion) {
       const { a, h, k } = currentQuestion.parameters;
-      plotTransformedGraph(a, h, k, false);
+      plotTransformedGraph(a, h, k);
     }
   }, [currentQuestion]);
 
@@ -43,7 +41,6 @@ function GraphPracticeApp() {
     const k = Math.floor(Math.random() * 9) - 4;
 
     const newQuestion = {
-      type: "graph",
       functionType: selectedFunction.type,
       parent: selectedFunction.parent,
       parameters: { a, h, k }
@@ -58,10 +55,11 @@ function GraphPracticeApp() {
     setShowFeedback(false);
   };
 
-  const plotTransformedGraph = (a, h, k, showParent = true) => {
-    if (!graphRef.current) return;
+  const plotTransformedGraph = async (a, h, k) => {
+    if (!graphRef.current || !currentQuestion) return;
 
-    const funcType = currentQuestion ? currentQuestion.functionType : "quadratic";
+    const Plotly = (await import("plotly.js-dist")).default;
+    const funcType = currentQuestion.functionType;
 
     let transformedYValues;
     switch (funcType) {
@@ -81,32 +79,32 @@ function GraphPracticeApp() {
         return;
     }
 
-    const traces = [{
-      x: xValues,
-      y: transformedYValues,
-      mode: "lines",
-      name: "Transformed function",
-      line: { color: "red" }
-    }];
+    const parentYValues = xValues.map(x => {
+      switch (funcType) {
+        case "quadratic": return x ** 2;
+        case "linear": return x;
+        case "absolute": return Math.abs(x);
+        case "cubic": return x ** 3;
+        default: return 0;
+      }
+    });
 
-    if (showParent) {
-      let parentYValues = xValues.map(x => {
-        switch (funcType) {
-          case "quadratic": return x ** 2;
-          case "linear": return x;
-          case "absolute": return Math.abs(x);
-          case "cubic": return x ** 3;
-          default: return 0;
-        }
-      });
-      traces.unshift({
+    const traces = [
+      {
         x: xValues,
         y: parentYValues,
         mode: "lines",
         name: "Parent function",
         line: { color: "blue", dash: "dash" }
-      });
-    }
+      },
+      {
+        x: xValues,
+        y: transformedYValues,
+        mode: "lines",
+        name: "Transformed function",
+        line: { color: "red" }
+      }
+    ];
 
     Plotly.newPlot(graphRef.current, traces, {
       title: "Graph",
@@ -119,9 +117,9 @@ function GraphPracticeApp() {
     if (!currentQuestion) return;
     const { a, h, k } = currentQuestion.parameters;
     if (parseFloat(aAnswer) === a && parseFloat(hAnswer) === h && parseFloat(kAnswer) === k) {
-      setFeedback("Correct! The values are accurate.");
+      setFeedback("✅ Correct! The values are accurate.");
     } else {
-      setFeedback(`Incorrect. The correct values are: a=${a}, h=${h}, k=${k}`);
+      setFeedback(`❌ Incorrect. The correct values are: a=${a}, h=${h}, k=${k}`);
     }
     setShowFeedback(true);
   };
@@ -132,7 +130,7 @@ function GraphPracticeApp() {
       <button onClick={generateGraphQuestion}>New Question</button>
       <h3>{questionTitle}</h3>
       <p>{questionText}</p>
-      <div ref={graphRef} style={{ width: "600px", height: "400px" }}></div>
+      <div ref={graphRef} style={{ width: "600px", height: "400px" }} />
       <div>
         <label>a: <input type="number" value={aAnswer} onChange={(e) => setAAnswer(e.target.value)} /></label>
         <label>h: <input type="number" value={hAnswer} onChange={(e) => setHAnswer(e.target.value)} /></label>

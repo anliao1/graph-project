@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Plotly from "plotly.js-dist"; // Ensure you've installed this dependency
-
+import dynamic from "next/dynamic";
+//import Plotly from "plotly.js-dist"; // Ensure you've installed this dependency
+const Plotly = typeof window !== "undefined" ? require("plotly.js-dist") : null;
 // Helper Functions
 
 // Returns a nicely formatted equation string based on the function type and transformation parameters.
