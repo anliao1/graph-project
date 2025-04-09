@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { firestore as db } from "../Firebase";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { collection, addDoc, query, orderBy, limit, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";    
 import dynamic from "next/dynamic";
 //import Plotly from "plotly.js-dist"; // Ensure you've installed this dependency
 const Plotly = typeof window !== "undefined" ? require("plotly.js-dist") : null;
@@ -241,6 +244,26 @@ function Graph({ equation }) {
 
 // Main Test App Component
 function GraphTestApp() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [highestStreak, setHighestStreak] = useState(0);
+  const [leaderboard, setLeaderboard] = useState([]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+      } else {
+        // Auto sign in anonymously if no user
+        setCurrentUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const [currentQuestion, setCurrentQuestion] = useState(generateQuestion());
   const [selectedChoice, setSelectedChoice] = useState("");
   const [score, setScore] = useState(0);
@@ -253,19 +276,58 @@ function GraphTestApp() {
     setSelectedChoice(e.target.value);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selectedChoice === "") return;
+
     setQuestionsAnswered((prev) => prev + 1);
-    if (selectedChoice === currentQuestion.correctChoice) {
+
+    const isCorrect = selectedChoice === currentQuestion.correctChoice;
+
+    if (isCorrect) {
+      const newStreak = streak + 1;
       setScore((prev) => prev + 1);
-      setStreak((prev) => prev + 1);
+      setStreak(newStreak);
       setFeedback("Correct!");
+
+      try {
+        if (currentUser) {
+          const userRef = doc(db, "users", currentUser.uid);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const prevMax = userData.maxTestStreak || 0;
+
+            await updateDoc(userRef, {
+              currentTestStreak: newStreak,
+              maxTestStreak: Math.max(prevMax, newStreak),
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error updating streaks:", error);
+      }
     } else {
       setStreak(0);
-      setFeedback("Incorrect. The correct answer was " + currentQuestion.correctChoice);
+      setFeedback(
+        "Incorrect. The correct answer was " + currentQuestion.correctChoice
+      );
+
+      try {
+        if (currentUser) {
+          const userRef = doc(db, "users", currentUser.uid);
+          await updateDoc(userRef, {
+            currentTestStreak: 0,
+          });
+        }
+      } catch (error) {
+        console.error("Error resetting currentTestStreak:", error);
+      }
     }
+
     setShowFeedback(true);
   };
+
 
   const handleNext = () => {
     setShowFeedback(false);
