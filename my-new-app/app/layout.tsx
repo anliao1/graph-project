@@ -1,6 +1,7 @@
+import "./globals.css"; // Import your global styles
 import { Header } from "@/components/Header";
-import { UserProvider } from "./context/UserContext"; // Import UserProvider
-import { ReactNode } from 'react';
+import { UserProvider } from "./context/UserContext";
+import { ReactNode } from "react";
 
 export const metadata = {
   title: "GraphQuest",
@@ -11,7 +12,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <UserProvider> {/* Wrap the entire app */}
+        <UserProvider>
           <Header />
           <main className="pt-20">{children}</main>
         </UserProvider>
