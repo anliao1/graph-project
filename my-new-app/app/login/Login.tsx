@@ -4,7 +4,7 @@ import * as React from 'react';
 import { updateStreak } from '../streak';
 import { Box, Button, Typography, createTheme, ThemeProvider } from '@mui/material';
 import { Google } from '@mui/icons-material';
-import { signInWithGoogle } from '../Firebase';
+import { auth, signInWithGoogle } from '../Firebase';
 import { useRouter } from 'next/navigation';
 import { useUser } from '../context/UserContext';
 
@@ -51,14 +51,29 @@ const Login: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithGoogle();
-      setUser(result.user);
-      await updateStreak();
-      router.push('/'); // Redirect to home page after successful login
-    } catch (error) {
-      console.error('Error during sign-in:', error);
-    }
-  };
+        const result = await signInWithGoogle();
+        const user = result.user;
+    
+        if (!user) throw new Error("Login failed.");
+    
+        setUser(user);
+    
+        // Wait for auth.currentUser to match the newly signed-in user
+        await new Promise((resolve) => {
+          const unsub = auth.onAuthStateChanged((authUser) => {
+            if (authUser?.uid === user.uid) {
+              resolve(null);
+              unsub();
+            }
+          });
+        });
+    
+        await updateStreak(); // now safe to call
+        router.push('/');
+      } catch (error) {
+        console.error('Error during sign-in:', error);
+      }
+    };
 
   return (
     <ThemeProvider theme={vibrantTheme}>

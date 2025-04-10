@@ -38,6 +38,15 @@ export const updateStreak = async () => {
       lastLogin: today,
       streak: 1,
     });
+  } else if (daysSinceLastLogin === 0 && userData.streak === undefined) {
+    // Do nothing, user logged in today
+    if(!userData.streak) {
+      await updateDoc(userRef, {
+        lastLogin: today,
+        streak: 1,
+      });
+    }
+
   }
 };
 export const getUserStreak = async (): Promise<number | null> => {
@@ -49,7 +58,7 @@ export const getUserStreak = async (): Promise<number | null> => {
   
     if (userSnap.exists()) {
       const data = userSnap.data();
-      return data.streak || 0;
+      return typeof data.streak === "number" ? data.streak : 1;
     }
   
     return null;

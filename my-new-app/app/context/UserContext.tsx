@@ -22,12 +22,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (firebaseUser) {
         setUser(firebaseUser);
 
-        // ✅ Save displayName to Firestore
+        // Save displayName to Firestore
         const userRef = doc(firestore, "users", firebaseUser.uid);
-        await setDoc(userRef, {
-          displayName: firebaseUser.displayName,
-          email: firebaseUser.email,
-        }, { merge: true }); // merge so it doesn’t overwrite existing fields like maxTestStreak
+        const userDataToMerge: Record<string, any> = {};
+        if (firebaseUser.displayName) userDataToMerge.displayName = firebaseUser.displayName;
+        if (firebaseUser.email) userDataToMerge.email = firebaseUser.email;
+
+        await setDoc(userRef, userDataToMerge, { merge: true });
       } else {
         setUser(null);
       }
